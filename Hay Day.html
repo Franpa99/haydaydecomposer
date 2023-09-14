@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hay Day Product Decomposer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fdf0d5;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #ff8c00;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 200px;
+      padding: 5px;
+    }
+    
+    button {
+      padding: 5px 10px;
+      background-color: #ff8c00;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    
+    table {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    
+    th {
+      background-color: #ffe0b2;
+    }
+    
+    .remove-button {
+      background-color: #ff0000;
+    }
+
+    .remove-button:hover {
+      background-color: #d50000;
+    }
+
+    #decomposeButton, #decomposedList {
+      width: 50%;
+      margin: 0 auto;
+    }
+
+    #decomposeButton {
+      display: block;
+      margin-top: 20px;
+      background-color: #ff8c00;
+      color: #fff;
+    }
+
+    #decomposeButton:hover {
+      background-color: #ffab40;
+    }
+
+    #decomposedList {
+      display: none;
+      margin-top: 30px;
+    }
+
+    #decomposedList caption {
+      color: #ff8c00;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    #decomposedList td[data-element]::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 5px;
+      background-color: #ff8c00;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hay Day Product Decomposer</h1>
+  
+  <form id="productForm">
+    <label for="productName">Product Name:</label>
+    <input type="text" id="productName" placeholder="Enter product name" required>
+    <button type="submit">Add Product</button>
+  </form>
+  
+  <table id="productList">
+    <caption><strong>Product List:</strong></caption>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Remove</th>
+      </tr>
+    </thead>
+    <tbody id="productBody">
+      
+    </tbody>
+  </table>
+  
+  <button id="decomposeButton" style="display: none;">Decompose Products</button>
+  
+  <table id="decomposedList" style="display: none;">
+    <caption><strong>Decomposed List:</strong></caption>
+    <thead>
+      <tr>
+        <th>Element</th>
+        <th>Quantity</th>
+      </tr>
+    </thead>
+    <tbody id="decomposedBody">
+      
+    </tbody>
+  </table>
+  
+  <script>
+    const productForm = document.getElementById('productForm');
+    const productList = document.getElementById('productList');
+    const productBody = document.getElementById('productBody');
+    const decomposeButton = document.getElementById('decomposeButton');
+    const decomposedList = document.getElementById('decomposedList');
+    const decomposedBody = document.getElementById('decomposedBody');
+    let products = [];
+    let decomposedProducts = [];
+    
+    productForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const productName = document.getElementById('productName').value;
+      const productQuantity = 1; // Default quantity is 1
+      
+      addProduct(productName, productQuantity);
+      document.getElementById('productName').value = '';
+    });
+    
+    function addProduct(name, quantity) {
+      const existingProduct = products.find(product => product.name === name);
+      if (existingProduct) {
+        existingProduct.quantity += quantity;
+      } else {
+        const product = { name, quantity };
+        products.push(product);
+      }
+      
+      renderProductList();
+      decomposeButton.style.display = 'block';
+    }
+    
+    function removeProduct(index) {
+      products.splice(index, 1);
+      renderProductList();
+      
+      if (products.length === 0) {
+        decomposeButton.style.display = 'none';
+      }
+    }
+    
+    function renderProductList() {
+      productBody.innerHTML = '';
+      
+      for (let i = 0; i < products.length; i++) {
+        const { name, quantity } = products[i];
+        
+        const row = document.createElement('tr');
+        const nameCell = document.createElement('td');
+        const quantityCell = document.createElement('td');
+        const removeCell = document.createElement('td');
+        const removeButton = document.createElement('button');
+        
+        nameCell.textContent = name;
+        quantityCell.textContent = quantity;
+        removeButton.textContent = 'Remove';
+        removeButton.classList.add('remove-button');
+        
+        removeButton.addEventListener('click', function() {
+          removeProduct(i);
+        });
+        
+        removeCell.appendChild(removeButton);
+        
+        row.appendChild(nameCell);
+        row.appendChild(quantityCell);
+        row.appendChild(removeCell);
+        
+        productBody.appendChild(row);
+      }
+    }
+    
+    decomposeButton.addEventListener('click', function() {
+      decomposeProducts();
+    });
+    
+    function decomposeProducts() {
+      decomposedProducts = [];
+      
+      for (let i = 0; i < products.length; i++) {
+        const { name, quantity } = products[i];
+        
+        decomposeProduct(name, quantity);
+      }
+      
+      renderDecomposedList();
+    }
+    
+    function decomposeProduct(productName, productQuantity) {
+      const decomposition = getDecomposition(productName);
+      
+      if (decomposition.length === 0) {
+        decomposedProducts.push({ element: productName, quantity: productQuantity });
+      } else {
+        for (const { element, quantity } of decomposition) {
+          decomposeProduct(element, quantity * productQuantity);
+        }
+      }
+    }
+    
+    function getDecomposition(productName) {
+      if (productName === 'chicken feed') {
+        return [
+          { element: 'wheat', quantity: 2 },
+          { element: 'corn', quantity: 1 }
+        ];
+      } else if (productName === 'cow feed') {
+        return [
+          { element: 'corn', quantity: 1 },
+          { element: 'soybean', quantity: 2 }
+        ];
+      } else if (productName === 'pig feed') {
+        return [
+          { element: 'carrot', quantity: 2 },
+          { element: 'soybean', quantity: 1 }
+        ];
+      } else if (productName === 'sheep feed') {
+        return [
+          { element: 'wheat', quantity: 3 },
+          { element: 'soybean', quantity: 1 }
+        ];
+      } else if (productName === 'goat feed') {
+        return [
+          { element: 'wheat', quantity: 1 },
+          { element: 'carrot', quantity: 2 },
+          { element: 'corn', quantity: 1 }
+        ];
+      } else if (productName === 'cream') {
+        return [
+          { element: 'milk', quantity: 1 }
+        ];
+      } else if (productName === 'butter') {
+        return [
+          { element: 'milk', quantity: 2 }
+        ];
+      } else if (productName === 'cheese') {
+        return [
+          { element: 'milk', quantity: 3 }
+        ];
+      } else if (productName === 'goat cheese') {
+        return [
+          { element: 'goat milk', quantity: 2 }
+        ];
+      } else if (productName === 'bread') {
+        return [
+          { element: 'wheat', quantity: 3 }
+        ];
+      } else if (productName === 'corn bread') {
+        return [
+          { element: 'corn', quantity: 2 },
+          { element: 'egg' , quantity: 2 }
+        ];
+      } else if (productName === 'cookie') {
+        return [
+          { element: 'wheat', quantity: 2 },
+          { element: 'brown sugar', quantity: 1 },
+          { element: 'egg', quantity: 2 }
+        ];
+      } else if (productName === 'raspberry muffin') {
+        return [
+          { element: 'raspberries', quantity: 2 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'blackberry muffin') {
+        return [
+          { element: 'blackberries', quantity: 2 },
+          { element: 'wheat', quantity: 1 },
+          { element: 'egg', quantity: 2 }
+        ];
+      } else if (productName === 'pizza') {
+        return [
+          { element: 'wheat', quantity: 2 },
+          { element: 'tomato', quantity: 1 },
+          { element: 'cheese', quantity: 1 }
+        ];
+      } else if (productName === 'brown sugar') {
+        return [
+          { element: 'sugarcane', quantity: 1 }
+        ];
+      } else if (productName === 'white sugar') {
+        return [
+          { element: 'sugarcane', quantity: 2 }
+        ];
+      } else if (productName === 'syrup') {
+        return [
+          { element: 'sugarcane', quantity: 4 }
+        ];
+      } else if (productName === 'popcorn') {
+        return [
+          { element: 'corn', quantity: 2 }
+        ];
+      } else if (productName === 'buttered popcorn') {
+        return [
+          { element: 'corn', quantity: 2 },
+          { element: 'butter', quantity: 1 }
+        ];
+      } else if (productName === 'chili popcorn') {
+        return [
+          { element: 'corn', quantity: 2 },
+          { element: 'chili pepper', quantity: 2 }
+        ];
+      } else if (productName === 'pancake') {
+        return [
+          { element: 'egg', quantity: 3 },
+          { element: 'brown sugar', quantity: 1 }
+        ];
+      } else if (productName === 'bacon and eggs') {
+        return [
+          { element: 'egg', quantity: 4 },
+          { element: 'bacon', quantity: 2 }
+        ];
+      } else if (productName === 'hamburger') {
+        return [
+          { element: 'bread', quantity: 2 },
+          { element: 'bacon', quantity: 2 }
+        ];
+      } else if (productName === 'fish burger') {
+        return [
+          { element: 'fish fillet', quantity: 2 },
+          { element: 'bread', quantity: 2 },
+          { element: 'chili pepper', quantity: 1 }
+        ];
+      } else if (productName === 'roasted tomatoes') {
+        return [
+          { element: 'tomato', quantity: 2 }
+        ];
+      } else if (productName === 'baked potato') {
+        return [
+          { element: 'potato', quantity: 2 },
+          { element: 'cream', quantity: 1 },
+          { element: 'chili pepper', quantity: 1 },
+          { element: 'cheese', quantity: 1 }
+        ];
+      } else if (productName === 'carrot pie') {
+        return [
+          { element: 'carrot', quantity: 3 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'pumpkin pie') {
+        return [
+          { element: 'pumpkin', quantity: 3 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'bacon pie') {
+        return [
+          { element: 'bacon', quantity: 3 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'apple pie') {
+        return [
+          { element: 'apples', quantity: 3 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 },
+          { element: 'syrup', quantity: 1 }
+        ];
+      } else if (productName === 'fish pie') {
+        return [
+          { element: 'fish fillet', quantity: 3 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'feta pie') {
+        return [
+          { element: 'goat cheese', quantity: 1 },
+          { element: 'wheat', quantity: 2 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'casserole') {
+        return [
+          { element: 'potato', quantity: 2 },
+          { element: 'cheese', quantity: 1 },
+          { element: 'bacon', quantity: 2 },
+          { element: 'egg', quantity: 2 }
+        ];
+      } else if (productName === 'carrot cake') {
+        return [
+          { element: 'carrot', quantity: 2 },
+          { element: 'butter', quantity: 1 },
+          { element: 'brown sugar', quantity: 1 }
+        ];
+      } else if (productName === 'cream cake') {
+        return [
+          { element: 'wheat', quantity: 5 },
+          { element: 'cream', quantity: 1 },
+          { element: 'white sugar', quantity: 1 }
+        ];
+      } else if (productName === 'red berry cake') {
+        return [
+          { element: 'raspberries', quantity: 1 },
+          { element: 'cherries', quantity: 2 },
+          { element: 'milk', quantity: 1 },
+          { element: 'egg', quantity: 1 }
+        ];
+      } else if (productName === 'cheesecake') {
+        return [
+          { element: 'cookie', quantity: 1 },
+          { element: 'cheese', quantity: 1 }
+        ];
+      } else if (productName === 'strawberry cake') {
+        return [
+          { element: 'wheat', quantity: 3 },
+          { element: 'cream', quantity: 1 },
+          { element: 'white sugar', quantity: 1 },
+          { element: 'strawberries', quantity: 2 }
+        ];
+      } else if (productName === 'chocolate cake') {
+        return [
+          { element: 'butter', quantity: 1 },
+          { element: 'brown sugar', quantity: 1 },
+          { element: 'cacaos', quantity: 2 }
+        ];
+      } else if (productName === 'sweater') {
+        return [
+          { element: 'wool', quantity: 2 }
+        ];
+      } else if (productName === 'cotton fabric') {
+        return [
+          { element: 'cotton', quantity: 3 }
+        ];
+      } else if (productName === 'blue woolly hat') {
+        return [
+          { element: 'wool', quantity: 1 },
+          { element: 'indigo', quantity: 1 }
+        ];
+      } else if (productName === 'blue sweater') {
+        return [
+          { element: 'wool', quantity: 2 },
+          { element: 'indigo', quantity: 2 }
+        ];
+      } else if (productName === 'cotton shirt') {
+        return [
+          { element: 'cotton fabric', quantity: 2 }
+        ];
+      } else if (productName === 'wooly chaps') {
+        return [
+          { element: 'cotton fabric', quantity: 1 },
+          { element: 'wool', quantity: 3 }
+        ];
+      } else if (productName === 'violet dress') {
+        return [
+          { element: 'cotton fabric', quantity: 2 },
+          { element: 'indigo', quantity: 1 },
+          { element: 'raspberries', quantity: 1 }
+        ];
+      } else if (productName === 'carrot juice') {
+        return [
+          { element: 'carrot', quantity: 3 }
+        ];
+      } else if (productName === 'apple juice') {
+        return [
+          { element: 'apples', quantity: 2 }
+        ];
+      } else if (productName === 'cherry juice') {
+        return [
+          { element: 'cherries', quantity: 2 }
+        ];
+      } else if (productName === 'tomato juice') {
+        return [
+          { element: 'tomato', quantity: 3 }
+        ];
+      } else if (productName === 'berry juice') {
+        return [
+          { element: 'raspberries', quantity: 1 },
+          { element: 'blackberries', quantity: 1 }
+        ];
+      } else if (productName === 'vanilla ice cream') {
+        return [
+          { element: 'cream', quantity: 1 },
+          { element: 'milk', quantity: 1 },
+          { element: 'white sugar', quantity: 1 }
+        ];
+      } else if (productName === 'cherry popsicle') {
+        return [
+          { element: 'cherry juice', quantity: 1 },
+          { element: 'syrup', quantity: 1 }
+        ];
+      } else if (productName === 'strawberry ice cream') {
+        return [
+          { element: 'cream', quantity: 1 },
+          { element: 'milk', quantity: 1 },
+          { element: 'white sugar', quantity: 1 },
+          { element: 'strawberries', quantity: 3 }
+        ];
+      } else if (productName === 'apple jam') {
+        return [
+          { element: 'apples', quantity: 3 }
+        ];
+      } else if (productName === 'raspberry jam') {
+        return [
+          { element: 'raspberries', quantity: 3 }
+        ];
+      } else if (productName === 'silver bar') {
+        return [
+          { element: 'silver ore', quantity: 3 }
+        ];
+      } else if (productName === 'gold bar') {
+        return [
+          { element: 'gold ore', quantity: 3 }
+        ];
+      } else if (productName === 'platinum bar') {
+        return [
+          { element: 'platinum ore', quantity: 3 }
+        ];
+      } else if (productName === 'refined coal') {
+        return [
+          { element: 'coal', quantity: 3 }
+        ];
+      } else if (productName === 'iron bar') {
+        return [
+          { element: 'iron ore', quantity: 3 }
+        ];
+      } else {
+        return [];
+      }
+    }
+    
+    function renderDecomposedList() {
+      decomposedBody.innerHTML = '';
+      
+      for (const { element, quantity } of decomposedProducts) {
+        const existingElement = decomposedBody.querySelector(`tr[data-element="${element}"]`);
+        if (existingElement) {
+          existingElement.querySelector('.quantity').textContent = Number(existingElement.querySelector('.quantity').textContent) + quantity;
+        } else {
+          const row = document.createElement('tr');
+          row.setAttribute('data-element', element);
+          const elementCell = document.createElement('td');
+          const quantityCell = document.createElement('td');
+          
+          elementCell.textContent = element;
+          quantityCell.textContent = quantity;
+          quantityCell.classList.add('quantity');
+          
+          row.appendChild(elementCell);
+          row.appendChild(quantityCell);
+          
+          decomposedBody.appendChild(row);
+        }
+      }
+      
+      decomposedList.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
