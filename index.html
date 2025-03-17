@@ -224,8 +224,34 @@
         decomposedProducts.push({ element: productName, quantity: productQuantity });
       } else {
         for (const { element, quantity } of decomposition) {
-          decomposeProduct(element, quantity * productQuantity);
+          let totalQuantity = quantity * productQuantity;
+
+          // Special case for animal products
+          if (["egg", "milk", "bacon", "wool", "goat milk"].includes(element)) {
+            let feedType = getFeedType(element);
+            let feedBatches = Math.ceil(totalQuantity / 3);
+            decomposeProduct(feedType, feedBatches);
+          } else {
+            decomposeProduct(element, totalQuantity);
+          }
         }
+      }
+    }
+
+    function getFeedType(animalProduct) {
+      switch (animalProduct) {
+        case "egg":
+          return "chicken feed";
+        case "milk":
+          return "cow feed";
+        case "bacon":
+          return "pig feed";
+        case "wool":
+          return "sheep feed";
+        case "goat milk":
+          return "goat feed";
+        default:
+          return null;
       }
     }
     
