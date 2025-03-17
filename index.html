@@ -221,20 +221,39 @@
       const decomposition = getDecomposition(productName);
       
       if (decomposition.length === 0) {
-        decomposedProducts.push({ element: productName, quantity: productQuantity });
+        addToDecomposedList(productName, productQuantity);
       } else {
+        let animalNeeds = {};
+
         for (const { element, quantity } of decomposition) {
           let totalQuantity = quantity * productQuantity;
 
-          // Special case for animal products
+          // Check if the element is an animal product
           if (["egg", "milk", "bacon", "wool", "goat milk"].includes(element)) {
-            let feedType = getFeedType(element);
-            let feedBatches = Math.ceil(totalQuantity / 3);
-            decomposeProduct(feedType, feedBatches);
+            if (!animalNeeds[element]) {
+              animalNeeds[element] = 0;
+            }
+            animalNeeds[element] += totalQuantity;
           } else {
             decomposeProduct(element, totalQuantity);
           }
         }
+
+        // Process feed requirements after decomposing regular ingredients
+        for (const [animalProduct, neededQuantity] of Object.entries(animalNeeds)) {
+          let feedType = getFeedType(animalProduct);
+          let feedBatches = Math.ceil(neededQuantity / 3);
+          decomposeProduct(feedType, feedBatches);
+        }
+      }
+    }
+
+    function addToDecomposedList(element, quantity) {
+      const existingElement = decomposedProducts.find(item => item.element === element);
+      if (existingElement) {
+        existingElement.quantity += quantity;
+      } else {
+        decomposedProducts.push({ element, quantity });
       }
     }
 
