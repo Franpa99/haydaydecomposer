@@ -208,42 +208,43 @@
     function decomposeProducts() {
       decomposedProducts = [];
       
+      let animalNeeds = {}; // Store animal product requirements
+
+      // Step 1: Break everything into base materials (including eggs, milk, etc.)
       for (let i = 0; i < products.length; i++) {
         const { name, quantity } = products[i];
-        
-        decomposeProduct(name, quantity);
+        decomposeProduct(name, quantity, animalNeeds);
+      }
+
+      // Step 2: Process animal needs and add required feed
+      for (const [animalProduct, neededQuantity] of Object.entries(animalNeeds)) {
+        let feedType = getFeedType(animalProduct);
+        let feedBatches = Math.ceil(neededQuantity / 3);
+        decomposeProduct(feedType, feedBatches, {}); // Process feed
       }
       
       renderDecomposedList();
     }
     
-    function decomposeProduct(productName, productQuantity) {
+    function decomposeProduct(productName, productQuantity, animalNeeds) {
       const decomposition = getDecomposition(productName);
       
       if (decomposition.length === 0) {
-        addToDecomposedList(productName, productQuantity);
+        // If it's an animal product, track it for feed processing
+        if (["egg", "milk", "bacon", "wool", "goat milk"].includes(productName)) {
+          if (!animalNeeds[productName]) {
+            animalNeeds[productName] = 0;
+          }
+          animalNeeds[productName] += productQuantity;
+        } else {
+          // Otherwise, just add it to the decomposed list
+          addToDecomposedList(productName, productQuantity);
+        }
       } else {
-        let animalNeeds = {};
-
+        // Decompose into ingredients
         for (const { element, quantity } of decomposition) {
           let totalQuantity = quantity * productQuantity;
-
-          // Check if the element is an animal product
-          if (["egg", "milk", "bacon", "wool", "goat milk"].includes(element)) {
-            if (!animalNeeds[element]) {
-              animalNeeds[element] = 0;
-            }
-            animalNeeds[element] += totalQuantity;
-          } else {
-            decomposeProduct(element, totalQuantity);
-          }
-        }
-
-        // Process feed requirements after decomposing regular ingredients
-        for (const [animalProduct, neededQuantity] of Object.entries(animalNeeds)) {
-          let feedType = getFeedType(animalProduct);
-          let feedBatches = Math.ceil(neededQuantity / 3);
-          decomposeProduct(feedType, feedBatches);
+          decomposeProduct(element, totalQuantity, animalNeeds);
         }
       }
     }
