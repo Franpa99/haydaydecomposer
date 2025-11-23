@@ -370,9 +370,38 @@ function wrapWithTooltip(productName, displayName = null) {
   return `<span class="tooltip-container">${display}${tooltip}</span>`;
 }
 
+// Position tooltips dynamically for fixed positioning
+function setupTooltipPositioning() {
+  document.addEventListener('mouseover', function(e) {
+    const container = e.target.closest('.tooltip-container');
+    if (!container) return;
+    
+    const tooltip = container.querySelector('.tooltip');
+    if (!tooltip) return;
+    
+    // Get container position
+    const rect = container.getBoundingClientRect();
+    
+    // Position tooltip above the element
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    const top = rect.top - tooltipRect.height - 10;
+    
+    // Adjust if tooltip goes off screen
+    const adjustedLeft = Math.max(10, Math.min(left, window.innerWidth - tooltipRect.width - 10));
+    const adjustedTop = top < 10 ? rect.bottom + 10 : top;
+    
+    tooltip.style.left = adjustedLeft + 'px';
+    tooltip.style.top = adjustedTop + 'px';
+  });
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
 }
+
+// Setup tooltip positioning
+setupTooltipPositioning();

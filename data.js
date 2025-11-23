@@ -319,7 +319,10 @@ const CATEGORIES = {
 
 // Get all product names for autocomplete
 function getAllProducts() {
-  return Object.keys(RECIPES).sort();
+  const recipeProducts = Object.keys(RECIPES);
+  const animalProducts = Object.keys(ANIMAL_PRODUCTS);
+  const allProducts = [...recipeProducts, ...animalProducts, ...BASE_INGREDIENTS];
+  return [...new Set(allProducts)].sort(); // Remove duplicates and sort
 }
 
 // Get recipe for a product (case-insensitive)
@@ -331,7 +334,9 @@ function getRecipe(productName) {
 // Check if product exists
 function productExists(productName) {
   const normalized = productName.toLowerCase().trim();
-  return normalized in RECIPES;
+  return normalized in RECIPES || 
+         normalized in ANIMAL_PRODUCTS || 
+         BASE_INGREDIENTS.includes(normalized);
 }
 
 // Animal products that require feeding
@@ -344,6 +349,45 @@ const ANIMAL_PRODUCTS = {
   'goat milk': { feed: 'goat feed', yield: 3 }
 };
 
+// Base ingredients (crops and other raw materials)
+const BASE_INGREDIENTS = [
+  // Crops
+  'wheat',
+  'corn',
+  'soybean',
+  'carrot',
+  'sugarcane',
+  'tomato',
+  'chili pepper',
+  'pumpkin',
+  'indigo',
+  'strawberry',
+  'raspberries',
+  'blackberries',
+  'cotton',
+  'potato',
+  'lettuce',
+  'cabbage',
+  'onion',
+  'garlic',
+  'cucumber',
+  'bell pepper',
+  'apple',
+  'cherry',
+  'peach',
+  'apricot',
+  'lemon',
+  'orange',
+  'cocoa',
+  'coffee bean',
+  'peanut',
+  'rice',
+  'mint',
+  'lavender',
+  'sunflower',
+  'grapes'
+];
+
 // Check if an item is an animal product
 function isAnimalProduct(productName) {
   const normalized = productName.toLowerCase().trim();
@@ -355,3 +399,10 @@ function getAnimalProductInfo(productName) {
   const normalized = productName.toLowerCase().trim();
   return ANIMAL_PRODUCTS[normalized];
 }
+
+// Check if an item is a base ingredient
+function isBaseIngredient(productName) {
+  const normalized = productName.toLowerCase().trim();
+  return BASE_INGREDIENTS.includes(normalized);
+}
+
